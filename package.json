@@ -4,11 +4,18 @@
   "description": "luck api",
   "main": "listen.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node listen.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon listen.js"
   },
   "author": "Emma.jarvis@inenco.com",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1"
+    "await-to-js": "^2.1.1",
+    "body-parser": "^1.19.0",
+    "coingecko-api": "^1.0.10",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.4"
   }
 }
