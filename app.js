@@ -2,10 +2,12 @@ const express = require('express');
 const cors = require ('cors');
 const bodyParser = require('body-parser');
 const app = express();
+const apiRouter = require('./router/apiRouter');
 const CoinGecko = require('coingecko-api');
 const to = require('await-to-js').default;
-const coinGecko = new CoinGecko();
 const { response } = require('express');
+const { handle404s, handle500s } = require('./errors')
+const coinGecko = new CoinGecko();
 
 // parse body params and attache them to req.body
 app.use(bodyParser.json());
@@ -15,18 +17,17 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
 // mount all routes on /api path
-// app.use('/api', routes);
+app.use('/api', apiRouter);
 
-async function coinGeckoSync() {
-	const [error, response] = await to(coinGecko.coins.markets({
-				order: 'market_cap_desc',
-				per_page: 15,
-				vs_currency: 'usd',
-				page: 1
-			}))
-					console.log(response.data);
-					}
+app.get("/", (req, res, next) =>
+  res.sendFile(`${__dirname}/views/index.html`)
+);
 
-coinGeckoSync();
+app.use('/*', (req, res) => {
+    res.status(404).send({msg: 'Page not found'});
+    });
+
+app.use(handle404s);
+app.use(handle500s);
 
 module.exports = app;
