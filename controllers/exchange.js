@@ -28,23 +28,18 @@ const getExchange = async (req, res, next) => {
         const fiat_data = await axios.get(fiat_url);
         switch (fiat) {
             case 'EUR':
-            case 'eur':
                 rate = fiat_data.data.quotes.USDEUR;
                 break;
             case 'AFN':
-            case 'afn':
                 rate = fiat_data.data.quotes.USDAFN;
                 break;
             case 'AMD':
-            case 'amd':
                 rate = fiat_data.data.quotes.USDAMD;
                 break;
             case 'BGN':
-            case 'bgn':
                 rate = fiat_data.data.quotes.USDBGN;
                 break;
             case 'USD':
-            case 'usd':
                 rate = 1;
                 break;
         }
