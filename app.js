@@ -17,4 +17,4 @@ app.use(cors());
 // mount all routes on /api path
 app.use('/api', routes);
 
-export default app;
+module.exports = app;
