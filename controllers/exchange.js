@@ -11,7 +11,7 @@ const getExchange = async (req, res, next) => {
     let crypto_error = '';
     let fiat_error = '';
     let api_response = {};
-    const cryptoCaptial = crypto.toUpperCase();
+    const cryptoCapital = crypto.toUpperCase();
     if (crypto !== '' && fiat !== '') {
         const crypto_url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=15&page=1&sparkline=false";
         await axios.get(crypto_url)
@@ -80,7 +80,7 @@ const getExchange = async (req, res, next) => {
         if (crypto_error === '' && fiat_error === '' ) {
             exchange_rate = crypto_price * rate;
             api_response = {
-                "cryptocurrency": cryptoCaptial,
+                "cryptocurrency": cryptoCapital,
                 "Fiat Currency": fiat.toUpperCase(),
                 "Exchange rate": exchange_rate,
                 "last updated": updated_date
@@ -101,7 +101,7 @@ const getExchange = async (req, res, next) => {
         }
     } else {
         api_response ={
-            "error": "Crypto currency and fiat currency must be required!"
+            "error": "Crypto currency and fiat currency are required!"
         }
     }
 
