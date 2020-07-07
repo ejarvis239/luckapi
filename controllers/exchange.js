@@ -4,105 +4,79 @@ const accessKey = config.access_key;
 
 const getExchange = async (req, res, next) => {
     const { fiat, crypto } = req.query;
+    if (!crypto || !fiat) res.send({error: "Crypto currency and fiat currency are required!"});
+
     let crypto_price = 0;
     let rate = 0;
     let exchange_rate = 0;
     let updated_date = '';
-    let crypto_error = '';
-    let fiat_error = '';
+    let crypto_error = null;
+    let fiat_error = null;
     let api_response = {};
     const cryptoCapital = crypto.toUpperCase();
-    if (crypto !== '' && fiat !== '') {
-        const crypto_url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=15&page=1&sparkline=false";
-        await axios.get(crypto_url)
-            .then((response) => {
-            let cryptoItem = {};
-            for(let i = 0;i<response.data.length;i++) {
-                if (response.data[i].symbol === crypto) {
-                    cryptoItem = response.data[i];
-                }
-            }
-            if (cryptoItem.symbol) {
-                crypto_price = cryptoItem.current_price;
-                updated_date = cryptoItem.last_updated;
-            } else {
-                crypto_error = 'Crypto currency info is incorrect, please use lowercase 3 digit currency code';
-            }
-        }).catch((error) => {
-            if (error.response) {
-                console.log(error.response.data);
-                console.log(error.response.status);
-                console.log(error.response.headers);
-            } else if (error.request) {
-                console.log(error.request);
-            } else {
-                console.log('Error', error.message);
-            }
-        });
-        if (fiat) {
-            const fiat_url = `http://apilayer.net/api/live?access_key=${accessKey}&currencies=${fiat.toUpperCase()}`
-            await axios.get(fiat_url).
-            then((response) => {
-                if (response.data.success === true) {
-                    switch (fiat.toUpperCase()) {
-                        case 'EUR':
-                            rate = response.data.quotes.USDEUR;
-                            break;
-                        case 'AFN':
-                            rate = response.data.quotes.USDAFN;
-                            break;
-                        case 'AMD':
-                            rate = response.data.quotes.USDAMD;
-                            break;
-                        case 'BGN':
-                            rate = response.data.quotes.USDBGN;
-                            break;
-                        case 'USD':
-                            rate = 1;
-                            break;
-                    }
-                } else {
-                    fiat_error = response.data.error.info;
-                }
-            }).catch((error) => {
-                if (error.response) {
-                    console.log(error.response.data);
-                    console.log(error.response.status);
-                    console.log(error.response.headers);
-                } else if (error.request) {
-                    console.log(error.request);
-                } else {
-                    console.log('Error', error.message);
-                }
-            });
 
+    const crypto_url = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=15&page=1&sparkline=false";
+    try {
+        let _data = await axios.get(crypto_url);
+        let cryptoItem = {};
+        for(let i = 0; i<_data.data.length; i++) {
+            if (_data.data[i].symbol === crypto) {
+                cryptoItem = _data.data[i];
+                break;
+            }
         }
-        if (crypto_error === '' && fiat_error === '' ) {
-            exchange_rate = crypto_price * rate;
-            api_response = {
-                "cryptocurrency": cryptoCapital,
-                "Fiat Currency": fiat.toUpperCase(),
-                "Exchange rate": exchange_rate,
-                "last updated": updated_date
+        if (cryptoItem.symbol) {
+            crypto_price = cryptoItem.current_price;
+            updated_date = cryptoItem.last_updated;
+        } else {
+            crypto_error = 'Crypto currency info is incorrect, please use lowercase 3 letter currency code';
+        }
+    } catch (error) {
+        if (error.response) {
+            console.log(error.response.data);
+            console.log(error.response.status);
+            console.log(error.response.headers);
+        } else if (error.request) {
+            console.log(error.request);
+        } else {
+            console.log('Error', error.message);
+        }
+    }
+    const fiat_url = `http://apilayer.net/api/live?access_key=${accessKey}&currencies=${fiat.toUpperCase()}`;
+    try {
+        let _response = await axios.get(fiat_url);
+        if (_response.data.success) {
+            if (fiat.toUpperCase() === 'USD') {
+                rate = 1;
+            } else {
+                const key = 'USD' + fiat.toUpperCase();
+                rate = _response.data.quotes[key];
             }
-        } else if (crypto_error === '' && fiat_error !== '') {
-            api_response = {
-                'error': fiat_error
-            }
-        } else if (crypto_error !== '' && fiat_error === '') {
-            api_response = {
-                'error': crypto_error
-            }
-        } else if (crypto_error !=='' && fiat_error !== '') {
-            api_response = {
-                'fiat_error': fiat_error,
-                'crypto_error': crypto_error
-            }
+        } else {
+            fiat_error = _response.data.error.info;
+        }
+    } catch (error) {
+        if (error.response) {
+            console.log(error.response.data);
+            console.log(error.response.status);
+            console.log(error.response.headers);
+        } else if (error.request) {
+            console.log(error.request);
+        } else {
+            console.log('Error', error.message);
+        }
+    }
+    if (!crypto_error && !fiat_error) {
+        exchange_rate = crypto_price * rate;
+        api_response = {
+            "cryptocurrency": cryptoCapital,
+            "Fiat Currency": fiat.toUpperCase(),
+            "Exchange rate": exchange_rate,
+            "last updated": updated_date
         }
     } else {
-        api_response ={
-            "error": "Crypto currency and fiat currency are required!"
-        }
+        if (crypto_error) api_response['crypto_error'] = crypto_error;
+        if (fiat_error) api_response['fiat_error'] = fiat_error;
     }
 
     res.send(api_response);
